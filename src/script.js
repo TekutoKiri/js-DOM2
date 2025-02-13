@@ -1,41 +1,36 @@
-const gallery = document.getElementById('gallery');
-let currentPage = 1;
-const imagesPerRow = 4; // Кількість зображень в рядку
-const minGap = 3; // Мінімальний відступ
-const maxGap = 15; // Максимальний відступ
+const imageContainer = document.getElementById('imageContainer');
 
-async function fetchImages(page) {
-    const response = await fetch(`https://picsum.photos/v2/list?page=${page}&limit=${imagesPerRow * 1}`);
-    const images = await response.json();
-    displayImages(images);
+function fetchImages() {
+    fetch('https://picsum.photos/v2/list?page=1&limit=4')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(image => {
+                const img = document.createElement('img');
+                img.src = image.download_url;
+                imageContainer.appendChild(img);
+            });
+        })
+        .catch(error => console.error('Error fetching images:', error));
 }
 
-function displayImages(images) {
-    images.forEach(image => {
-        const imgElement = document.createElement('img');
-        imgElement.src = image.download_url;
-        gallery.appendChild(imgElement);
-    });
-    
-    updateImageSizes(); // Оновлюємо розміри зображень після їх додавання
-}
-
-function updateImageSizes() {
-    const containerWidth = gallery.clientWidth; // Ширина контейнера
-    const gap = Math.min(Math.max(containerWidth * 0.03, minGap), maxGap); // Обчислюємо відступ
-    const totalGapWidth = gap * (imagesPerRow - 1); // Загальна ширина відступів
-    const imageWidth = (containerWidth - totalGapWidth) / imagesPerRow; // Ширина кожного зображення
-
-    const imgElements = gallery.getElementsByTagName('img');
-    for (let img of imgElements) {
-        img.style.width = `${imageWidth}px`; // Встановлюємо ширину
-        img.style.height = 'auto'; // Автоматична висота
+document.getElementById('loadMore').addEventListener('click', fetchImages);
+document.getElementById('clearGallery').addEventListener('click', () => {
+    imageContainer.innerHTML = '';
+});
+document.getElementById('removeLast').addEventListener('click', () => {
+    const images = imageContainer.getElementsByTagName('img');
+    if (images.length > 0) {
+        imageContainer.removeChild(images[images.length - 1]);
     }
-    
-    // Додати gap до стилю галереї
-    gallery.style.gap = `${gap}px`;
-}
+});
+document.getElementById('reverseGallery').addEventListener('click', () => {
+    const images = Array.from(imageContainer.getElementsByTagName('img'));
+    imageContainer.innerHTML = '';
+    images.reverse().forEach(img => imageContainer.appendChild(img));
+});
 
+// Завантажуємо 4 картинки при першому завантаженні
+fetchImages();
 // Завантажити початкові картинки
 fetchImages(currentPage);
 
